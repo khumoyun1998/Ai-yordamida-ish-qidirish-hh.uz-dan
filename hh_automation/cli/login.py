@@ -22,15 +22,15 @@ async def login() -> None:
         })
 
         print("\n" + "=" * 60)
-        print("HH.ru Login")
+        print("tashkent.hh.uz Login")
         print("=" * 60)
 
         try:
-            print("Opening HH.ru login page...")
-            await page.goto("https://hh.ru/login", wait_until="networkidle")
+            print("Opening tashkent.hh.uz login page...")
+            await page.goto("https://tashkent.hh.uz/login", wait_until="networkidle")
             
             if not is_headless:
-                print("\n1. Log in to HH.ru in the opened browser window")
+                print("\n1. Log in to tashkent.hh.uz in the opened browser window")
                 print("2. Wait until you see your personal profile")
                 print("3. Come back here and press Enter")
                 input("\nPress Enter after you have successfully logged in...")
@@ -72,7 +72,7 @@ async def login() -> None:
                     raise Exception(f"Could not click login button: {e}")
                 
                 # Шаг 3: Теперь ищем поле для ввода email/телефона
-                user_input = input("\nEnter your HH.ru Email or Phone: ").strip()
+                user_input = input("\nEnter your tashkent.hh.uz Email or Phone: ").strip()
                 
                 # DEBUG: Сохраняем HTML страницы для анализа
                 html_content = await page.content()
@@ -84,10 +84,10 @@ async def login() -> None:
                 is_phone = user_input.startswith('+') or user_input.isdigit()
                 
                 if is_phone:
-                    # Убираем +7 из начала номера, если есть
+                    # Убираем +998 из начала номера, если есть
                     phone_number = user_input.replace('+', '').replace(' ', '').replace('-', '')
-                    if phone_number.startswith('7'):
-                        phone_number = phone_number[1:]  # Убираем первую цифру '7'
+                    if phone_number.startswith('998'):
+                        phone_number = phone_number[3:]  # Убираем первую цифру '998'
                     
                     print(f"Entering phone number (without country code): {phone_number}")
                     
