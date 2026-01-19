@@ -1,3 +1,5 @@
+# Настраивается для Узбекистана. 
+
 # HH.ru Automation
 
 Асинхронная автоматизация поиска и откликов на вакансии HH.ru через Python + n8n + Google Gemini AI.
@@ -41,8 +43,8 @@ SERVER_HOST=127.0.0.1
 SERVER_PORT=8000
 
 # Настройки поиска
-DEFAULT_SEARCH_TEXT=Frontend
-AREA_CODE=113
+#DEFAULT_SEARCH_TEXT=Frontend
+AREA_CODE=97
 
 # Настройки браузера (опционально)
 BROWSER_HEADLESS=true
