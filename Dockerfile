@@ -4,29 +4,29 @@ WORKDIR /app
 
 COPY requirements.txt .
 
-# Устанавливаем Python пакеты
+# Python paketlarini o'rnatamiz
 RUN pip install --no-cache-dir -r requirements.txt
 
 RUN playwright install chromium
 
-# Копируем исходный код проекта
+# Proyekt manba kodini ko'chiramiz
 COPY . .
 
-# Делаем скрипт запуска исполняемым
+# Ishga tushirish skriptini faollashtirish
 RUN chmod +x /app/entrypoint.sh
 
-# Устанавливаем переменные окружения
+# O'zgaruvchanlarni o'rnatamiz
 ENV SERVER_HOST=0.0.0.0
 ENV SERVER_PORT=8000
 ENV N8N_FILES_DIR=/app/data
 ENV BROWSER_HEADLESS=true
 ENV PYTHONPATH=/app
 
-# Создаем директорию для данных
+# Ma'lumotlar uchun katalogni yaratamiz
 RUN mkdir -p /app/data
 
-# Открываем порт
+# Portni ochib qo'yamiz
 EXPOSE 8000
 
-# Используем скрипт входа
+# Kirish skriptini foydalaning
 ENTRYPOINT ["/app/entrypoint.sh"]

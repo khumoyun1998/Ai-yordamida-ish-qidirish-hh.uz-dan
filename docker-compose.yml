@@ -7,7 +7,7 @@ services:
       - "8000:8000"
     volumes:
       - ./data:/app/data
-      - .:/app # Маппим текущую папку, чтобы изменения в коде работали сразу
+      - .:/app # Joriy papkani map qilish, kod o'zgarishlari darhol ishga tushadi
     environment:
       - SERVER_HOST=0.0.0.0
       - SERVER_PORT=8000
@@ -28,7 +28,7 @@ services:
       - N8N_PROTOCOL=http
       - NODE_ENV=production
       - WEBHOOK_URL=http://localhost:5678/
-      - HH_SERVER_URL=http://hh-automation:8000 # URL сервера HH Automation
+      - HH_SERVER_URL=http://hh-automation:8000 # HH Automation serveri URLsi
     restart: unless-stopped
 
 volumes:

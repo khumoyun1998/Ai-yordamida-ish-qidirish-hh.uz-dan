@@ -40,7 +40,7 @@ class VacancyApplyService:
 
     async def _check_already_applied(self, page: Page) -> bool:
         """Ushbu vakansiyaga javob berilganligini tekshirish."""
-        locator = page.locator("text=Вы откликнулись")
+        locator = page.locator("text=Siz javob berdingiz")
         return await locator.count() > 0
 
     async def _fill_cover_letter_modal(
@@ -113,7 +113,7 @@ class VacancyApplyService:
             await dropdown_arrow.first.click()
             await page.wait_for_timeout(500)
             
-            with_letter_option = page.locator("text=С сопроводительным письмом")
+            with_letter_option = page.locator("text=Kuzatuv xati bilan")
             if await with_letter_option.count() > 0:
                 await with_letter_option.first.click()
                 result = await self._fill_cover_letter_modal(page, message)
@@ -128,7 +128,7 @@ class VacancyApplyService:
         message: str
     ) -> Optional[ApplyResult]:
         """Javob berish o'tkazilganidan so'ng qo'llash xatini to'ldirish urinishi."""
-        resume_delivered = page.locator("text=Резюме доставлено")
+        resume_delivered = page.locator("text=Rezyume yetkazildi")
         
         if await resume_delivered.count() > 0 or await page.locator("textarea").count() > 0:
             logger.debug("Javob berish utkazilgan o'tkazilgan ekran topildi")
@@ -137,7 +137,7 @@ class VacancyApplyService:
             if await letter_area.count() > 0 and message:
                 await letter_area.first.fill(message)
                 
-                submit_btn = page.locator("button:has-text('Отправить')")
+                submit_btn = page.locator("button:has-text('Yuborish')")
                 if await submit_btn.count() > 0:
                     await submit_btn.first.click()
                     await page.wait_for_timeout(2000)
@@ -148,9 +148,9 @@ class VacancyApplyService:
     async def _check_application_success(self, page: Page) -> bool:
         """Javob berish muvaffaqiyatli yuborilganligini tekshirish."""
         success_texts = [
-            "text=Отклик отправлен",
-            "text=Вы откликнулись",
-            "text=Резюме доставлено"
+            "text=Javob topshirildi",
+            "text=Siz javob berdingiz",
+            "text=Rezyume yetkazildi"
         ]
         for selector in success_texts:
             if await page.locator(selector).count() > 0:
