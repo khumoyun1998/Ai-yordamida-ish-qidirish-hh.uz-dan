@@ -18,7 +18,7 @@ logger = logging.getLogger("HHServer")
 
 
 class ApplyRequest(BaseModel):
-    """Тело запроса для отклика на вакансию."""
+    """Vakansiyaga arizaning so'rov tanasi."""
     url: HttpUrl
     message: str = ""
 
@@ -35,21 +35,21 @@ class ErrorResponse(BaseModel):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Starting browser manager...")
+    logger.info("Brauzer menejeri ishga tushmoqda...")
     await browser_manager.start()
     yield
-    logger.info("Shutting down browser manager...")
+    logger.info("Brauzer menejeri o‘chirilmoqda...")
     await browser_manager.stop()
 
 
 app = FastAPI(
-    title="HH.ru Automation API",
-    description="Async API for searching and applying to vacancies on HH.ru",
+    title="hh.uz avtomatlashtirish APIsi",
+    description="hh.uz saytida vakansiyalarni qidirish va ariza topshirish uchun Async API",
     version="2.0.0",
     lifespan=lifespan
 )
 
-# Middleware для CORS
+# CORS uchun Middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -58,7 +58,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Экземпляры сервисов
+# Servislar namunalari
 search_service = VacancySearchService()
 apply_service = VacancyApplyService()
 
@@ -66,14 +66,14 @@ apply_service = VacancyApplyService()
 @app.get("/search")
 async def search_vacancies(
     text: str = Query(default="Frontend", description="Search query text"),
-    page: int = Query(default=0, ge=0, description="Page number (0-indexed)")
+    page: int = Query(default=0, ge=0, description="Sahifa raqami (0-indexlangan)")
 ) -> list[dict]:
     """
-    Поиск вакансий на HH.ru.
+    HH.ru da vakansiyalarni qidirish.
     
-    Возвращает список вакансий с заголовком, URL, работодателем и описанием.
+    Sarlavha, URL, ish beruvchi va tavsif bilan vakansiyalar ro'yxatini qaytaradi.
     """
-    logger.info(f"Search request: text='{text}', page={page}")
+    logger.info(f"Qidiruv so'rovnomasi: matn='{text}', sahifa={page}")
     
     try:
         vacancies = await search_service.search(query=text, page_num=page)
@@ -83,24 +83,24 @@ async def search_vacancies(
     except RuntimeError as e:
         raise HTTPException(status_code=503, detail=str(e))
     except Exception as e:
-        logger.error(f"Search failed: {e}", exc_info=True)
+        logger.error(f"Qidiruv amalga oshmadi: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/apply", response_model=ApplyResponse)
 async def apply_to_vacancy(request: ApplyRequest) -> ApplyResponse:
     """
-    Отклик на вакансию с опциональным сопроводительным письмом.
+    Ixtiyoriy kuzatuv xati bilan vakansiyaga javob.
     
-    Возвращает статус и сообщение результата отклика.
+    Javob natijasi holatini va xabarini qaytaradi.
     """
-    logger.info(f"Apply request: url={request.url}")
+    logger.info(f"Arizani qabul qilish so'rovnomasi: url={request.url}")
     
     try:
         result = await apply_service.apply(str(request.url), request.message)
         return ApplyResponse(**result)
     except Exception as e:
-        logger.error(f"Apply failed: {e}", exc_info=True)
+        logger.error(f"Arizani qabul qilish amalga oshmadi: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -115,12 +115,12 @@ async def health_check() -> dict:
 
 
 def run():
-    """Запуск сервера."""
+    """Serverni ishga tushirish."""
     import uvicorn
     settings = get_settings()
     
-    logger.info(f"Starting HH Automation API on http://{settings.server_host}:{settings.server_port}")
-    logger.info("Endpoints:")
+    logger.info(f"HH Avtomatlashtirish API http://{settings.server_host}:{settings.server_port} da ishga tushmoqda")
+    logger.info("Tugunlar:")
     logger.info("  GET  /search?text=Frontend&page=0")
     logger.info("  POST /apply  { 'url': '...', 'message': '...' }")
     logger.info("  GET  /health")

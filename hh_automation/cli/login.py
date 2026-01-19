@@ -16,30 +16,30 @@ async def login() -> None:
     print(f"DEBUG: is_headless={is_headless}")
     
     async with manager.get_interactive_context(headless=is_headless) as (context, page):
-        # Устанавливаем более реалистичный User-Agent
+        # Yanada realistik User-Agent o'rnatish
         await page.set_extra_http_headers({
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         })
 
         print("\n" + "=" * 60)
-        print("tashkent.hh.uz Login")
+        print("tashkent.hh.uz Kirish")
         print("=" * 60)
 
         try:
-            print("Opening tashkent.hh.uz login page...")
+            print("tashkent.hh.uz kirish sahifasini ochish...")
             await page.goto("https://tashkent.hh.uz/login", wait_until="networkidle")
             
             if not is_headless:
-                print("\n1. Log in to tashkent.hh.uz in the opened browser window")
-                print("2. Wait until you see your personal profile")
-                print("3. Come back here and press Enter")
-                input("\nPress Enter after you have successfully logged in...")
+                print("\n1. Ochilgan brauzer oynasida tashkent.hh.uz ga kiring")
+                print("2. Siz shaxsiy profilingizni ko'rguningizcha kutib turing")
+                print("3. Bu yerga qaytib Enter tugmasini bosing")
+                input("\nMuvaffaqiyatli kirdingizdan so'ng Enter tugmasini bosing...")
             else:
-                print("\n[DOCKER MODE] Starting automated login...")
+                print("\n[DOCKER REJIMI] Avtomatlashtirilgan kirishan boshlanmoqda...")
                 
-                # Шаг 1: Убедимся что выбран тип аккаунта "Соискатель" (applicant)
+                # 1-qadam: Akkaunt turi \"Qidiruvchi\" (applicant) tanlanganligigini tekshiring
                 try:
-                    print("Ensuring 'Applicant' account type is selected...")
+                    print("'Ariza beruvchi' akkaunt turi tanlanganligigini tekshiryapman...")
                     applicant_radio = await page.wait_for_selector(
                         'input[data-qa="account-type-card-APPLICANT"]', 
                         timeout=5000
@@ -48,70 +48,70 @@ async def login() -> None:
                     is_checked = await applicant_radio.is_checked()
                     if not is_checked:
                         await applicant_radio.check()
-                        print("✓ Selected 'Applicant' account type")
+                        print("✓ 'Ariza beruvchi' akkaunt turi tanlandi")
                     else:
-                        print("✓ 'Applicant' account type already selected")
+                        print("✓ 'Ariza beruvchi' akkaunt turi allaqachon tanlangan")
                     
                     await asyncio.sleep(1)
                 except Exception as e:
-                    print(f"Warning: Could not select applicant radio button: {e}")
+                    print(f"Ogohlantiruv: Ariza beruvchi radio tugmasini tanlay olmadim: {e}")
                 
-                # Шаг 2: Кликаем на кнопку "Войти" чтобы перейти к форме логина
+                # 2-qadam: Kirish formiga o'tish uchun "Kirish" tugmasini bosing
                 try:
-                    print("Clicking 'Login' button to proceed...")
+                    print("'Kirish' tugmasini bosamiz...")
                     submit_button = await page.wait_for_selector(
                         'button[data-qa="submit-button"]',
                         timeout=5000
                     )
                     await submit_button.click()
-                    print("✓ Clicked 'Login' button")
+                    print("✓ 'Kirish' tugmasi bosildi")
                     
-                    # Ждем загрузки страницы с формой логина
+                    # Kirish formasi bilan sahifaning yuklanishini kutamiz
                     await asyncio.sleep(3)
                 except Exception as e:
-                    raise Exception(f"Could not click login button: {e}")
+                    raise Exception(f"Kirish tugmasini bosa olmadim: {e}")
                 
-                # Шаг 3: Теперь ищем поле для ввода email/телефона
-                user_input = input("\nEnter your tashkent.hh.uz Email or Phone: ").strip()
+                # 3-qadam: Email/telefon kiritish maydonini qidiramiz
+                user_input = input("\ntashkent.hh.uz Emailingizni yoki Telefonni kiriting: ").strip()
                 
-                # DEBUG: Сохраняем HTML страницы для анализа
+                # DEBUG: HTML sahifasini analiz uchun saqlash
                 html_content = await page.content()
                 with open("data/login_form_page.html", "w", encoding="utf-8") as f:
                     f.write(html_content)
-                print("DEBUG: Saved login form HTML to data/login_form_page.html")
+                print("DEBUG: HTML kirish formasi data/login_form_page.html fayliga saqlandi")
                 
-                # Определяем, это телефон или email
+                # Bu telefon yoki email ekanligini aniqlash
                 is_phone = user_input.startswith('+') or user_input.isdigit()
                 
                 if is_phone:
-                    # Убираем +998 из начала номера, если есть
+                    # Raqamning boshidan +998 ni olib tashlash
                     phone_number = user_input.replace('+', '').replace(' ', '').replace('-', '')
                     if phone_number.startswith('998'):
-                        phone_number = phone_number[3:]  # Убираем первую цифру '998'
+                        phone_number = phone_number[3:]  # Birinchi '998' raqamini olib tashlash
                     
-                    print(f"Entering phone number (without country code): {phone_number}")
+                    print(f"Telefon raqami kiritilmoqda (mamlakat kodisiz): {phone_number}")
                     
-                    # Ищем поле для ввода номера телефона (без кода страны)
+                    # Telefon raqami kiritish maydonini qidirish (mamlakat kodi bo'lmasdan)
                     phone_input_selector = 'input[data-qa="magritte-phone-input-national-number-input"]'
                     try:
                         phone_field = await page.wait_for_selector(phone_input_selector, timeout=5000)
                         await phone_field.fill(phone_number)
-                        print("✓ Filled phone number field")
+                        print("✓ Telefon raqami maydoni to'ldirildi")
                     except Exception as e:
-                        raise Exception(f"Could not find phone input field: {e}")
+                        raise Exception(f"Telefon raqamini kiritish maydoni topilmadi: {e}")
                         
                 else:
-                    # Это email, нужно переключиться на вкладку "Почта"
-                    print("Switching to email tab...")
+                    # Bu email, "Pochta" varaqasiga o'tish kerak
+                    print("Email varaqasiga o'tilmoqda...")
                     try:
                         email_tab = await page.wait_for_selector('input[data-qa="credential-type-EMAIL"]', timeout=5000)
                         await email_tab.click()
                         await asyncio.sleep(1)
-                        print("✓ Switched to email tab")
+                        print("✓ Email varaqasiga o'tildi")
                     except Exception as e:
-                        print(f"Warning: Could not switch to email tab: {e}")
+                        print(f"Ogohlantiruv: Email varaqasiga o'ta olmadim: {e}")
                     
-                    # Ищем поле для ввода email
+                    # Email kiritish maydonini qidirish
                     email_selectors = [
                         'input[type="email"]',
                         'input[name="login"]',
@@ -124,28 +124,28 @@ async def login() -> None:
                             email_field = await page.wait_for_selector(selector, timeout=3000)
                             if email_field and await email_field.is_visible():
                                 await email_field.fill(user_input)
-                                print("✓ Filled email field")
+                                print("✓ Email maydoni to'ldirildi")
                                 break
                         except:
                             continue
                     
-                    if not email_field:
-                        raise Exception("Could not find email input field")
+                    print("⚠️  Email maydoniga kiritildi")
+                    raise Exception("Email kiritish maydonini topa olmadim")
                 
-                # Кликаем на кнопку "Дальше" (Next)
+                # "Keyingi" tugmasini bosing
                 await page.click('button[data-qa="submit-button"]')
-                print("✓ Clicked 'Next' button")
+                print("✓ 'Keyingi' tugmasi bosildi")
                 
-                # Ждем появления следующей страницы
-                print("Waiting for OTP or next step...")
+                # Keyingi sahifa yoki OTP xabarini kutamiz
+                print("OTP yoki keyingi qadam kutilmoqda...")
                 await asyncio.sleep(3)
                 
-                # Сохраняем скриншот для отладки
+                # Debuging uchun skrinshot saqlash
                 await page.screenshot(path="data/after_submit.png")
-                print("DEBUG: Screenshot saved to data/after_submit.png")
+                print("DEBUG: Skrinshot data/after_submit.png ga saqlandi")
                 
-                # Ждем поле для кода - пробуем разные селекторы
-                print("Checking for OTP code request...")
+                # Kod maydonini kutamiz - turli selektorlarni sinab ko'rish
+                print("OTP kod so'rovini tekshiryapman...")
                 
                 otp_selectors = [
                     'input[data-qa="otp-code-input"]',
@@ -160,19 +160,19 @@ async def login() -> None:
                     try:
                         otp_field = await page.wait_for_selector(selector, timeout=5000)
                         if otp_field and await otp_field.is_visible():
-                            print(f"✓ Found OTP field with selector: {selector}")
+                            print(f"✓ OTP maydoni topildi selector bilan: {selector}")
                             break
                     except:
                         continue
                 
                 if otp_field:
-                    otp_code = input("\n🔐 Enter the OTP code sent to you: ").strip()
+                    otp_code = input("\n🔐 Sizga yuborilgan OTP kodni kiriting: ").strip()
                     await otp_field.fill(otp_code)
-                    print("✓ Entered OTP code")
+                    print("✓ OTP kod kiritildi")
                     
-                    # Ищем кнопку подтверждения OTP
+                    # OTP tasdiqlash tugmasini qidirish
                     try:
-                        # Ждем кнопку подтверждения
+                        # Tasdiqlash tugmasini kutamiz
                         await asyncio.sleep(1)
                         confirm_button_selectors = [
                             'button[data-qa="submit-button"]',
@@ -184,38 +184,38 @@ async def login() -> None:
                                 confirm_btn = await page.wait_for_selector(btn_selector, timeout=3000)
                                 if confirm_btn and await confirm_btn.is_visible():
                                     await confirm_btn.click()
-                                    print("✓ Clicked OTP confirm button")
+                                    print("✓ OTP tasdiqlash tugmasi bosildi")
                                     break
                             except:
                                 continue
                     except Exception as e:
-                        print(f"Note: Could not find/click OTP confirm button: {e}")
+                        print(f"Eslatma: OTP tasdiqlash tugmasini topa olmadim/bosa olmadim: {e}")
                     
-                    # После ввода кода HH обычно редиректит сам, подождем
-                    print("Validating... please wait.")
+                    # Kod kiritilgandan so'ng HH odatda o'z-o'zidan yo'naltiradi, kutamiz
+                    print("Tasdiqlanmoqda... iltimos kutib turing.")
                     await asyncio.sleep(5)
                 else:
-                    print("⚠️  OTP field not detected. Possible reasons:")
-                    print("   - You might already be logged in")
-                    print("   - The page might require password instead of OTP")
-                    print("   - An error occurred")
-                    print("   Check data/after_submit.png to see what happened")
+                    print("⚠️  OTP maydoni aniqlandi. Ehtimoliy sabablar:")
+                    print("   - Siz allaqachon tizimga kirgansiz")
+                    print("   - Sahifa parol o'rniga OTP talab etishi mumkin")
+                    print("   - Xato ro'y berdi")
+                    print("   Nima bo'lganini ko'rish uchun data/after_submit.png ni tekshiring")
 
                 cookies = await context.cookies()
                 if not any(c['name'] == 'hhtoken' for c in cookies):
-                    print("⚠️  Warning: 'hhtoken' not found in cookies. Login might have failed.")
+                    print("⚠️  Ogohlantiruv: 'hhtoken' cookies da topilmadi. Kirish muvaffaqsiz bo'lishi mumkin.")
                 else:
-                    print("✓ Successfully authenticated!")
+                    print("✓ Muvaffaqiyatli autentifikatsiya!")
 
         except Exception as e:
-            print(f"\n[ERROR] {e}")
+            print(f"\n[XATO] {e}")
             await page.screenshot(path="data/error_login.png")
-            print("Screenshot saved to data/error_login.png. Check it to see what went wrong.")
+            print("Skrinshot data/error_login.png ga saqlandi. Nima bo'lganini ko'rish uchun uni tekshiring.")
             return
 
-        # Сохраняем сессию
+        # Sessiyani saqlash
         await context.storage_state(path=str(settings.session_file))
-        print(f"\n✓ Session saved to: {settings.session_file}")
+        print(f"\n✓ Sessiya saqlandi: {settings.session_file}")
 
 def main() -> None:
     asyncio.run(login())

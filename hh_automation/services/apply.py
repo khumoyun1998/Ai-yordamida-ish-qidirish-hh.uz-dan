@@ -1,4 +1,4 @@
-"""Асинхронный сервис отклика на вакансии."""
+"""Vakansiyalarga javob berish uchun asinxron xizmat."""
 
 import logging
 from dataclasses import dataclass
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class ApplyStatus(str, Enum):
-    """Статус коды"""
+    """Statusi kodlari"""
     SUCCESS = "success"
     SKIPPED = "skipped"
     ERROR = "error"
@@ -21,7 +21,7 @@ class ApplyStatus(str, Enum):
 
 @dataclass
 class ApplyResult:
-    """Результат попытки отклика на вакансию."""
+    """Vakansiyaga javob berish urinishining natijasi."""
     status: ApplyStatus
     message: str
 
@@ -30,16 +30,16 @@ class ApplyResult:
 
 
 class VacancyApplyService:
-    """Сервис для отклика на вакансии на HH.ru."""
+    """HH.ru da vakansiyalarga javob berish xizmati."""
 
     async def _check_bot_protection(self, page: Page) -> bool:
-        """Проверка, сработала ли защита от ботов (капча)."""
+        """Bot himoyasi ishga tushishi (kapcha) tekshirish."""
         title = await page.title()
         content = await page.content()
         return "captcha" in title.lower() or "robot" in content.lower()
 
     async def _check_already_applied(self, page: Page) -> bool:
-        """Проверка, был ли уже совершен отклик на эту вакансию."""
+        """Ushbu vakansiyaga javob berilganligini tekshirish."""
         locator = page.locator("text=Вы откликнулись")
         return await locator.count() > 0
 
@@ -49,13 +49,13 @@ class VacancyApplyService:
         message: str
     ) -> Optional[ApplyResult]:
         """
-        Заполнение сопроводительного письма в модальном окне и отправка.
+        Modal oynasida qo'llash xatini to'ldirish va yuborish.
         
-        Возвращает:
-            ApplyResult в случае успеха, None если взаимодействие с окном не удалось.
+        Qaytaradi:
+            Muvaffaqiyatlilik holatida ApplyResult, agar modal bilan o'zaro aloqa muvaffaqsiz bo'lsa None.
         """
         try:
-            logger.debug("Waiting for application modal...")
+            logger.debug("Qo'llash modali kutilmoqda...")
             await page.wait_for_selector("[data-qa='vacancy-response-popup']", timeout=5000)
             await page.wait_for_timeout(1000)
             
@@ -63,21 +63,21 @@ class VacancyApplyService:
                 "textarea[data-qa='vacancy-response-popup-form-letter-input']"
             )
             if await letter_area.count() > 0:
-                logger.debug(f"Filling cover letter ({len(message)} chars)")
+                logger.debug(f"Qo'llash xatini to'ldirish ({len(message)} harf)")
                 await letter_area.fill(message)
             else:
-                logger.warning("Cover letter field not found in modal")
+                logger.warning("Modal oynasida qo'llash xatining maydoni topilmadi")
             
             submit_btn = page.locator("button[data-qa='vacancy-response-submit-popup']")
             if await submit_btn.count() > 0:
                 await submit_btn.click()
                 await page.wait_for_timeout(3000)
-                return ApplyResult(ApplyStatus.SUCCESS, "Applied with cover letter")
+                return ApplyResult(ApplyStatus.SUCCESS, "Qo'llash xati bilan javob berildi")
             else:
-                return ApplyResult(ApplyStatus.ERROR, "Submit button not found")
+                return ApplyResult(ApplyStatus.ERROR, "Yuborish tugmasi topilmadi")
                 
         except Exception as e:
-            logger.error(f"Modal interaction failed: {e}")
+            logger.error(f"Modal bilan ishlash muvaffaqsiz bo'ldi: {e}")
             return None
 
     async def _try_cover_letter_link(
@@ -85,11 +85,11 @@ class VacancyApplyService:
         page: Page,
         message: str
     ) -> Optional[ApplyResult]:
-        """Попытка отклика через ссылку 'Написать сопроводительное'."""
+        """'Qo'llash xatini yozish' havolasi orqali javob berish urinishi."""
         cover_letter_link = page.locator("a:has-text('Написать сопроводительное')")
         
         if await cover_letter_link.count() > 0 and message:
-            logger.debug("Found 'Write cover letter' link, clicking...")
+            logger.debug("'Qo'llash xati yozish' havolasi topildi, bosish...")
             await cover_letter_link.first.click()
             result = await self._fill_cover_letter_modal(page, message)
             if result:
@@ -102,14 +102,14 @@ class VacancyApplyService:
         page: Page,
         message: str
     ) -> Optional[ApplyResult]:
-        """Попытка отклика через выпадающее меню с опцией сопроводительного письма."""
+        """Qo'llash xatiga ega belgili menyu orqali javob berish urinishi."""
         dropdown_arrow = page.locator(
             "[data-qa='vacancy-response-link-top'] + button, "
             "[data-qa='vacancy-response-link-bottom'] + button"
         )
         
         if await dropdown_arrow.count() > 0 and message:
-            logger.debug("Found dropdown, expanding options...")
+            logger.debug("Belgili menyu topildi, kengaytirish...")
             await dropdown_arrow.first.click()
             await page.wait_for_timeout(500)
             
@@ -127,11 +127,11 @@ class VacancyApplyService:
         page: Page,
         message: str
     ) -> Optional[ApplyResult]:
-        """Попытка заполнения сопроводительного письма на экране после отклика."""
+        """Javob berish o'tkazilganidan so'ng qo'llash xatini to'ldirish urinishi."""
         resume_delivered = page.locator("text=Резюме доставлено")
         
         if await resume_delivered.count() > 0 or await page.locator("textarea").count() > 0:
-            logger.debug("Found post-apply screen")
+            logger.debug("Javob berish utkazilgan o'tkazilgan ekran topildi")
             
             letter_area = page.locator("textarea")
             if await letter_area.count() > 0 and message:
@@ -141,12 +141,12 @@ class VacancyApplyService:
                 if await submit_btn.count() > 0:
                     await submit_btn.first.click()
                     await page.wait_for_timeout(2000)
-                    return ApplyResult(ApplyStatus.SUCCESS, "Applied with post-apply cover letter")
+                    return ApplyResult(ApplyStatus.SUCCESS, "Javob berish o'tkazilganidan so'ng qo'llash xati bilan javob berildi")
         
         return None
 
     async def _check_application_success(self, page: Page) -> bool:
-        """Проверка успешности отправки отклика."""
+        """Javob berish muvaffaqiyatli yuborilganligini tekshirish."""
         success_texts = [
             "text=Отклик отправлен",
             "text=Вы откликнулись",
@@ -159,45 +159,45 @@ class VacancyApplyService:
 
     async def apply(self, url: str, message: str = "") -> dict:
         """
-        Отклик на вакансию с опциональным сопроводительным письмом.
+        Vakansiyaga ixtiyoriy qo'llash xati bilan javob bering.
         
-        Аргументы:
-            url: URL вакансии.
-            message: Опциональный текст сопроводительного письма.
+        Argumentlar:
+            url: Vakansiya URL manzili.
+            message: Ixtiyoriy qo'llash xatining matni.
             
-        Возвращает:
-            Словарь со статусом и сообщением.
+        Qaytaradi:
+            Holat va xabar bilan lug'at.
         """
-        logger.info(f"Applying to: {url}")
+        logger.info(f"Quyidagiga javob berilmoqda: {url}")
         if message:
-            logger.debug(f"Cover letter: {len(message)} chars")
+            logger.debug(f"Qo'llash xati: {len(message)} harf")
 
         try:
             async with browser_manager.get_page(use_session=True) as page:
-                # Переход к вакансии
+                # Vakansiyaga o'tish
                 try:
                     await page.goto(url, wait_until="domcontentloaded", timeout=30000)
                 except Exception as e:
-                    logger.warning(f"Navigation timeout: {e}")
-                    # Продолжаем в любом случае, страница могла загрузиться достаточно
+                    logger.warning(f"Navigatsiya timeout: {e}")
+                    # Baraye ham davom ettiring, sahifa etarli darajada yuklanishi mumkin
 
-                # Проверка защиты от ботов
+                # Bot himoyasi tekshirish
                 if await self._check_bot_protection(page):
                     return ApplyResult(
                         ApplyStatus.ERROR,
-                        "Bot protection triggered (captcha)"
+                        "Bot himoyasi ishga tushdi (kapcha)"
                     ).to_dict()
 
-                # Проверка, был ли уже отклик
+                # Oldindan javob berilganligini tekshirish
                 if await self._check_already_applied(page):
-                    return ApplyResult(ApplyStatus.SKIPPED, "Already applied").to_dict()
+                    return ApplyResult(ApplyStatus.SKIPPED, "Allaqachon javob berilgan").to_dict()
 
-                # Стратегия 1: Попытка через ссылку сопроводительного письма
+                # Strategiya 1: Qo'llash xati havolasi orqali urinish
                 result = await self._try_cover_letter_link(page, message)
                 if result:
                     return result.to_dict()
 
-                # Поиск кнопки отклика
+                # Javob berish tugmasini qidirish
                 apply_btn = page.locator("[data-qa='vacancy-response-link-top']")
                 if await apply_btn.count() == 0:
                     apply_btn = page.locator("[data-qa='vacancy-response-link-bottom']")
@@ -205,35 +205,35 @@ class VacancyApplyService:
                 if await apply_btn.count() == 0:
                     return ApplyResult(
                         ApplyStatus.ERROR,
-                        "Apply button not found"
+                        "Javob berish tugmasi topilmadi"
                     ).to_dict()
 
-                # Стратегия 2: Попытка через выпадающий список с сопроводительным
+                # Strategiya 2: Belgili ro'yxat orqali qo'llash xati bilan urinish
                 result = await self._try_dropdown_apply(page, message)
                 if result:
                     return result.to_dict()
 
-                # Стратегия 3: Стандартная кнопка отклика
-                logger.debug("Clicking standard apply button...")
+                # Strategiya 3: Standart javob berish tugmasi
+                logger.debug("Standart javob berish tugmasini bosamiz...")
                 await apply_btn.first.click()
                 await page.wait_for_timeout(2000)
 
-                # Стратегия 4: Сопроводительное письмо после отклика
+                # Strategiya 4: Javob berish o'tkazilgandan so'ng qo'llash xati
                 result = await self._try_post_apply_letter(page, message)
                 if result:
                     return result.to_dict()
 
-                # Проверка успешности отклика
+                # Javob berish muvaffaqiyatligini tekshirish
                 if await self._check_application_success(page):
-                    return ApplyResult(ApplyStatus.SUCCESS, "Applied successfully").to_dict()
+                    return ApplyResult(ApplyStatus.SUCCESS, "Muvaffaqiyatli javob berildi").to_dict()
                 else:
                     return ApplyResult(
                         ApplyStatus.SUCCESS,
-                        "Applied (status unclear)"
+                        "Javob berildi (holati aniq emas)"
                     ).to_dict()
 
         except FileNotFoundError as e:
             return ApplyResult(ApplyStatus.ERROR, str(e)).to_dict()
         except Exception as e:
-            logger.error(f"Application failed: {e}", exc_info=True)
+            logger.error(f"Qo'llash muvaffaqsiz bo'ldi: {e}", exc_info=True)
             return ApplyResult(ApplyStatus.ERROR, str(e)).to_dict()

@@ -1,4 +1,4 @@
-"""Асинхронное управление браузером Playwright"""
+"""Playwright brauzer asinkron boshqaruvi"""
 
 import asyncio
 import logging
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 class BrowserManager:
     """
-    Управляет жизненным циклом браузера Playwright.
+    Playwright brauzeri hayot tsiklini boshqaradi.
     """
 
     def __init__(self) -> None:
@@ -25,16 +25,16 @@ class BrowserManager:
         self._settings = get_settings()
 
     async def start(self) -> None:
-        """Инициализация Playwright и запуск браузера."""
+        """Playwright va brauzer ishga tushirishini boshlash."""
         async with self._lock:
             if self._playwright is None:
-                logger.info("Starting Playwright...")
+                logger.info("Playwright ishga tushmoqda...")
                 self._playwright = await async_playwright().start()
                 self._browser = await self._playwright.chromium.launch(
                     headless=self._settings.browser_headless,
                     slow_mo=self._settings.browser_slow_mo
                 )
-                logger.info("Browser launched successfully")
+                logger.info("Brauzer muvaffaqiyatli ishga tushdi")
 
     async def stop(self) -> None:
         async with self._lock:
@@ -44,10 +44,10 @@ class BrowserManager:
             if self._playwright:
                 await self._playwright.stop()
                 self._playwright = None
-            logger.info("Browser stopped")
+            logger.info("Brauzer to'xtatildi")
 
     def _validate_session(self) -> None:
-        """Проверка наличия и валидности файла сессии."""
+        """Sessiya faylining mavjudligi va to'g'riligi tekshiruvi."""
         if not self._settings.session_file.exists():
             raise FileNotFoundError(
                 f"Session file not found: {self._settings.session_file}. "
@@ -57,13 +57,13 @@ class BrowserManager:
     @asynccontextmanager
     async def get_page(self, use_session: bool = True) -> AsyncGenerator[Page, None]:
         """
-        Получение страницы браузера с опциональным состоянием сессии.
+        Shaxsiy sessiya holatiga ega brauzer sahifasini olish.
         
-        Аргументы:
-            use_session: Загружать ли сохраненное состояние аутентификации.
+        Argumentlar:
+            use_session: Saqlangan autentifikatsiya holatini yuklash kerakmi.
             
-        Возвращает:
-            Настроенную страницу браузера, готовую к использованию.
+        Qaytaradi:
+            Foydalanishga tayyorlanmish sozlanmış brauzer sahifasi.
         """
         if not self._browser:
             await self.start()
@@ -90,15 +90,15 @@ class BrowserManager:
     @asynccontextmanager
     async def get_interactive_context(self, headless: Optional[bool] = None) -> AsyncGenerator[tuple[BrowserContext, Page], None]:
         """
-        Получение интерактивного контекста браузера для ручных операций (например, входа).
+        Manual operatsiyalar uchun interaktiv brauzer kontekstini olish (masalan, kirish).
         
-        Возвращает:
-            Кортеж (context, page)
+        Qaytaradi:
+            Kortej (context, page)
         """
         if headless is None:
             headless = self._settings.browser_headless
 
-        # Запуск браузера для интерактивного использования
+        # Interaktiv foydalanish uchun brauzer ishga tushirish
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=headless)
             context = await browser.new_context()
@@ -110,5 +110,5 @@ class BrowserManager:
                 await browser.close()
 
 
-# Глобальный экземпляр менеджера браузера
+# Brauzer menejer global namunasi
 browser_manager = BrowserManager()

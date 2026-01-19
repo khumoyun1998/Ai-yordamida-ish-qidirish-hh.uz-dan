@@ -1,4 +1,4 @@
-"""Асинхронный сервис поиска вакансий."""
+"""Vakansiyalarni qidirish asinxron xizmati."""
 
 import logging
 from dataclasses import dataclass
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class Vacancy:
-    """Модель данных вакансии."""
+    """Vakansiya ma'lumotlar modeli."""
     title: str
     url: str
     employer: str
@@ -30,21 +30,21 @@ class Vacancy:
 
 
 class VacancySearchService:
-    """Сервис для поиска вакансий на HH.ru."""
+    """HH.ru da vakansiyalarni qidirish xizmati."""
 
     def __init__(self) -> None:
         self._settings = get_settings()
 
     async def _get_vacancy_description(self, page: Page, url: str) -> str:
         """
-        Переход на страницу вакансии и извлечение полного описания.
+        Vakansiya sahifasiga o'tish va to'liq tavsifni ajratib olish.
         
-        Аргументы:
-            page: Страница браузера для использования.
-            url: URL вакансии.
+        Argumentlar:
+            page: Foydalanish uchun brauzer sahifasi.
+            url: Vakansiya URL manzili.
             
-        Возвращает:
-            Полный текст описания вакансии.
+        Qaytaradi:
+            Vakansiyaning to'liq tavsif matni.
         """
         try:
             await page.goto(url, wait_until="domcontentloaded", timeout=15000)
@@ -56,11 +56,11 @@ class VacancySearchService:
             return ""
             
         except Exception as e:
-            logger.warning(f"Failed to get description for {url}: {e}")
+            logger.warning(f"Vakansiya tavsifini olish muvaffaqsiz bo'ldi {url}: {e}")
             return ""
 
     async def _check_bot_protection(self, page: Page) -> bool:
-        """Проверка, сработала ли защита от ботов (капча)."""
+        """Bot himoyasi ishga tushishi (kapcha) tekshirish."""
         title = await page.title()
         content = await page.content()
         return "captcha" in title.lower() or "robot" in content.lower()
@@ -71,25 +71,25 @@ class VacancySearchService:
         page_num: int = 0
     ) -> list[dict]:
         """
-        Поиск вакансий, соответствующих запросу.
+        So'rovga mos keladigan vakansiyalarni qidirish.
         
-        Аргументы:
-            query: Текст запроса. По умолчанию используется значение из настроек.
-            page_num: Номер страницы для пагинации (начиная с 0).
+        Argumentlar:
+            query: So'rov matni. Sozlamalardan qiymatidan foydalaniladi.
+            page_num: Paginatsiya uchun sahifa raqami (0 dan boshlanadi).
             
-        Возвращает:
-            Список словарей вакансий с заголовком, URL, работодателем и описанием.
+        Qaytaradi:
+            Sarlavha, URL, ish beruvchi va tavsif bilan vakansiyalar lug'atlari ro'yxati.
             
-        Исключения:
-            RuntimeError: Если сработала защита от ботов.
-            FileNotFoundError: Если файл сессии не найден.
+        Istisno:
+            RuntimeError: Agar bot himoyasi ishga tushsa.
+            FileNotFoundError: Agar sessiya fayli topilmasa.
         """
         query = query or self._settings.default_search_text
         
-        logger.info(f"Searching vacancies: query='{query}', page={page_num}")
+        logger.info(f"Vakansiyalarni qidirish: so'rov='{query}', sahifa={page_num}")
 
         async with browser_manager.get_page(use_session=True) as page:
-            # Сборка URL для поиска
+            # Qidiruv uchun URL tuzish
             url = (
                 f"https://hh.ru/search/vacancy?"
                 f"text={query}&area={self._settings.area_code}"
@@ -99,12 +99,12 @@ class VacancySearchService:
             await page.goto(url, wait_until="domcontentloaded")
             
             if await self._check_bot_protection(page):
-                raise RuntimeError("Bot protection triggered (captcha detected)")
+                raise RuntimeError("Bot himoyasi ishga tushdi (kapcha aniqlandi)")
 
-            # Ожидание результатов
+            # Natijalaring kutilishi
             await page.wait_for_selector("[data-qa='vacancy-serp__vacancy']", timeout=10000)
             
-            # Сбор основных данных вакансий из результатов поиска
+            # Qidiruv natijalari bo'yicha vakansiyalar asosiy ma'lumotlarini to'plash
             vacancy_data: list[dict] = []
             cards = await page.locator("[data-qa='vacancy-serp__vacancy']").all()
             
@@ -120,7 +120,7 @@ class VacancySearchService:
                     employer = (
                         await employer_el.inner_text() 
                         if await employer_el.count() > 0 
-                        else "Unknown"
+                        else "Noma'lum"
                     )
                     
                     vacancy_data.append({
@@ -130,10 +130,10 @@ class VacancySearchService:
                     })
                     
                 except Exception as e:
-                    logger.warning(f"Failed to parse vacancy card {i}: {e}")
+                    logger.warning(f"Vakansiya kartochkasini tahlil qilish muvaffaqsiz bo'ldi {i}: {e}")
                     continue
 
-            # Получение полных описаний для каждой вакансии
+            # Har bir vakansiya uchun to'liq tavsifni olish
             vacancies: list[dict] = []
             for data in vacancy_data:
                 description = await self._get_vacancy_description(page, data["url"])
@@ -145,5 +145,5 @@ class VacancySearchService:
                 )
                 vacancies.append(vacancy.to_dict())
 
-            logger.info(f"Found {len(vacancies)} vacancies")
+            logger.info(f"{len(vacancies)} ta vakansiya topildi")
             return vacancies

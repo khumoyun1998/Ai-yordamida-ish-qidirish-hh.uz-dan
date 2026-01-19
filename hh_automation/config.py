@@ -8,7 +8,7 @@ from pydantic import Field
 
 class Settings(BaseSettings):
 
-    # Конфигурация сервера
+    # Server sozlamasi
     server_host: str = Field(default="127.0.0.1", alias="SERVER_HOST")
     server_port: int = Field(default=8000, alias="SERVER_PORT")
 
@@ -17,22 +17,22 @@ class Settings(BaseSettings):
         alias="N8N_FILES_DIR"
     )
 
-    # Настройки поиска
+    # Qidiruv sozlamalari
     default_search_text: str = Field(default="Frontend", alias="DEFAULT_SEARCH_TEXT")
-    area_code: str = Field(default="113", alias="AREA_CODE")  # Russia
+    area_code: str = Field(default="97", alias="AREA_CODE")  # Uzbekistan
 
-    # Настройки браузера
+    # Brauzer sozlamalari
     browser_headless: bool = Field(default=True, alias="BROWSER_HEADLESS")
     browser_slow_mo: int = Field(default=0, alias="BROWSER_SLOW_MO")
     page_timeout: int = Field(default=30000, alias="PAGE_TIMEOUT")
 
     @property
     def session_file(self) -> Path:
-        """Путь к сессии Playwright."""
+        """Playwright sessiya yo'li."""
         return self.n8n_files_dir / "hh_session.json"
 
     def ensure_dirs(self) -> None:
-        """Если папки для ссессии нет, создаем."""
+        """Agar sessiya papkasi mavjud bo'lmasa, uni yaratamiz."""
         self.n8n_files_dir.mkdir(parents=True, exist_ok=True)
 
     class Config:
